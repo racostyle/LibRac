@@ -1,47 +1,33 @@
 ﻿using Librac.ProcessHandlerLib;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading.Tasks;
 
 namespace Librac.DotnetLib
 {
     internal class DotnetMethods : IDotnet
     {
-        #region EXTERNAL PROCESS
         public string[] Run_LaunchAssembly(
             IProcessHandler? processHandler,
             string assemblyPath,
             bool hideWindow = false,
             bool runAsAdmin = false,
             string infoSaveLocation = "",
-            Action<string>? outputCallback = null)
+            Action? callback = null)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = assemblyPath,
-                UseShellExecute = !hideWindow, //if hideWindow = true it must be false to redirect output
-                CreateNoWindow = hideWindow,
-                RedirectStandardOutput = hideWindow,
-                RedirectStandardError = hideWindow,
-                Verb = runAsAdmin ? "runAs" : string.Empty,
-            };
+            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, hideWindow, runAsAdmin);
 
             var process = new Process();
             process.StartInfo = startInfo;
             process.EnableRaisingEvents = true;
 
-            OutputWriter? writer = null;
-            if (outputCallback != null)
-            {
-                writer = new OutputWriter(outputCallback);
-                SubscribeToOutputStream(process, writer);
-            }
+            var writer = new OutputWriter((value) => Console.WriteLine(value));
+            SubscribeToOutputStream(process, writer);
 
             process.Exited += (sender, e) =>
             {
                 UnSubscribeFromOutputStream(process, writer);
+                callback?.Invoke();
                 process.Dispose();
             };
 
@@ -57,24 +43,17 @@ namespace Librac.DotnetLib
             }
             return new string[] { process.Id.ToString(), process.StartTime.ToString() };
         }
-        #endregion
 
-        #region INTERNAL PROCESS
-        public async Task Run_ExecuteAssemblyAsync(string assemblyPath, string args = "", Action? callback = null)
+        public async Task Run_ExecuteAssemblyAsync(
+            string assemblyPath,
+            bool hideWindow = false,
+            bool runAsAdmin = false,
+            string args = "",
+            Action? callback = null)
         {
             string result = string.Empty;
 
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet", // Use the dotnet runtime
-                Arguments = $"{assemblyPath} {args}",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                Verb = "runAs"
-            };
+            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, hideWindow, runAsAdmin);
 
             var tcs = new TaskCompletionSource<bool>();
             using (var process = new Process())
@@ -93,10 +72,12 @@ namespace Librac.DotnetLib
                 };
 
                 process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
+                if (hideWindow)
+                {
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+                }
 
-                // Wait for the process to exit
                 await tcs.Task;
             }
         }
@@ -134,9 +115,23 @@ namespace Librac.DotnetLib
             process.BeginErrorReadLine();
             return process;
         }
-        #endregion
 
         #region AUXILARY
+        private static ProcessStartInfo CreateStartInfo(string assemblyPath, bool hideWindow, bool runAsAdmin)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = assemblyPath,
+                UseShellExecute = !hideWindow, //if hideWindow = true it must be false to redirect output
+                CreateNoWindow = hideWindow,
+                RedirectStandardOutput = hideWindow,
+                RedirectStandardError = hideWindow,
+                Verb = runAsAdmin ? "runAs" : string.Empty,
+            };
+            return startInfo;
+        }
+
         private void SubscribeToOutputStream(Process process, OutputWriter? writer)
         {
             if (writer != null)

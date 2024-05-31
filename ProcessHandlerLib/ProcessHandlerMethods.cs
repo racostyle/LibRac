@@ -13,10 +13,6 @@ namespace Librac.ProcessHandlerLib
         internal readonly int CREATON_TIME = 1;
 
         #region KILL PROCESS BY PID AND CRATE TIME
-        /// <summary>
-        /// Will search trough all opened procesess and kill a process with PID and TimeCreated saved in <paramref name="fullFileName"/> if processs has same 
-        /// PID and TimeCreated
-        /// </summary>
         public void KillProcess_ByPIDAndTimeCreated(string fullFileName)
         {
             if (!File.Exists(fullFileName))
@@ -78,13 +74,6 @@ namespace Librac.ProcessHandlerLib
         #endregion
 
         #region KILL PROCESS BY NAME
-        /// <summary>
-        /// Generates a PowerShell command to forcefully terminate processes by name, allowing for inclusion (name matches) and exclusion (name does not match prefixed with "!") criteria. 
-        /// After Runs a powershell script and executes said command. It will kill all proceses which respect naming conditions
-        /// <para>
-        /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
-        /// </para>
-        /// </summary> 
         public async Task KillProcess_ByName(params string[] args)
         {
             var command = GenerateDeleteProcesesByNameCommand(args);
