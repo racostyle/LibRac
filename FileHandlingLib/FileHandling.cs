@@ -5,7 +5,7 @@
     /// </summary>
     public static class FileHandling 
     {
-        private static readonly IFileHandling _fileHandling = new FileHandlingMethods();
+        private static readonly FileHandlingMethods _fileHandling = new FileHandlingMethods();
         /// <summary>
         /// Sets the ReadOnly attribute to all files in the specified directory and its subdirectories.
         /// </summary>

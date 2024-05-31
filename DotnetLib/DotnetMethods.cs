@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Librac.DotnetLib
 {
-    internal class DotnetMethods : IDotnet
+    internal class DotnetMethods
     {
         public string[] Run_LaunchAssembly(
             IProcessHandler? processHandler,

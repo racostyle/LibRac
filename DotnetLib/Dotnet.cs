@@ -10,7 +10,7 @@ namespace Librac.DotnetLib
     /// </summary>
     public static class Dotnet
     {
-        private static readonly IDotnet _dotnet = new DotnetMethods();
+        private static readonly DotnetMethods _dotnet = new DotnetMethods();
         /// <summary>
         /// Asynchronously executes an assembly with specified arguments and configuration, and invokes a callback upon completion.
         /// </summary>

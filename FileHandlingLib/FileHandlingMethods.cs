@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Librac.FileHandlingLib
 {
-    internal class FileHandlingMethods : IFileHandling
+    internal class FileHandlingMethods
     {
         public void RemoveReadOnlyFromDirectory(string directoryPath)
         {
