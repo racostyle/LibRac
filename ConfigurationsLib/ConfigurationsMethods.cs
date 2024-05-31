@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace Librac.ConfigurationsLib
 {
-    internal class ConfigurationMethods
+    internal class ConfigurationsMethods
     {
         #region LOADING
         internal Dictionary<string, string>? LoadConfigurationFromFile(string fileLocation)

@@ -9,7 +9,7 @@ namespace Librac.ConfigurationsLib
     /// </summary>
     public static class Configurations
     {
-        private static ConfigurationMethods _configurationMethods = new ConfigurationMethods();
+        private static ConfigurationsMethods _configurationMethods = new ConfigurationsMethods();
 
         /// <summary>
         /// Loads configuration settings from a specified file.
