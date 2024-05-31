@@ -95,7 +95,6 @@ namespace Librac.ConfigurationsLib
                     // Set the value at the appropriate key
                     currentJsonNode[keys[keys.Length - 1]] = kvp.Value;
                 } catch { }
-                
             }
             return jObject;
         }
