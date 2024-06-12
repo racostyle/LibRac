@@ -74,33 +74,10 @@ namespace Librac.ProcessHandlerLib
         #endregion
 
         #region KILL PROCESS BY NAME
-        public async Task KillProcess_ByName(params string[] args)
+        public void KillProcess_ByName(params string[] args)
         {
             var command = GenerateDeleteProcesesByNameCommand(args);
-            await ExecuteInBackgroundAsync(command, true);
-        }
-
-        private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
-        {
-            ProcessStartInfo info = new ProcessStartInfo
-            {
-                FileName = "powershell",
-                Arguments = command,
-                Verb = asAdmin ? "runAs" : string.Empty,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = true
-            };
-
-            using (Process process = new Process())
-            {
-                process.StartInfo = info;
-                await Task.Run(() =>
-                {
-                    process.Start();
-                    process.WaitForExit();
-                });
-            }
+            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
         /// <summary>
@@ -137,11 +114,73 @@ namespace Librac.ProcessHandlerLib
         }
         #endregion
 
+        #region KILL PROCESESS BY FILTERING FULL NAME
+
+        public void KillDotnetProcess_ByFullNameFilter(string filter)
+        {
+            var script = GenerateKillProcessByOwnerNameCommand(filter).Replace("\"", "\\\"");
+            Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
+        }
+
+        private string GenerateKillProcessByOwnerNameCommand(string processName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("$processes = Get-WmiObject Win32_Process -Filter \"Name = 'dotnet.exe'\"");
+            sb.AppendLine("foreach ($process in $processes) {");
+            sb.AppendLine("    $ownerInfo = $process.GetOwner().User");
+            sb.AppendLine("    if ($process.CommandLine -and $process.CommandLine -like '*" + processName + "*') {");
+            sb.AppendLine("        Write-Host \"Terminating process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo\"");
+            sb.AppendLine("        try {");
+            sb.AppendLine("            $proc = Get-Process -Id $process.ProcessId");
+            sb.AppendLine("            $proc.Kill()");
+            sb.AppendLine("            Write-Host 'Process terminated successfully.'");
+            sb.AppendLine("        } catch {");
+            sb.AppendLine("            Write-Host \"Failed to terminate process: $_\"");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
+        #endregion
+
+        #region EXECUTOR 
+        private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
+        {
+            ProcessStartInfo info = new ProcessStartInfo
+            {
+                FileName = "powershell",
+                Arguments = command,
+                Verb = asAdmin ? "runAs" : string.Empty,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (Process process = new Process())
+            {
+                process.StartInfo = info;
+                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+                process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
+
+                await Task.Run(() =>
+                {
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+                    process.WaitForExit();
+                });
+            }
+        }
+        #endregion
+
+        #region AUXILIARY
         internal async Task FindProcesesByWindowStyle()
         {
             var command = "Get-Process | Where-Object { $_.MainWindowTitle -ne \"\" } | Select-Object Id, Name, MainWindowTitle";
             await ExecuteInBackgroundAsync(command, true);
         }
+        #endregion
     }
 
 }

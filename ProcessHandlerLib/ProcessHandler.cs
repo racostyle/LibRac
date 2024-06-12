@@ -17,9 +17,9 @@ namespace Librac.ProcessHandlerLib
         /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
         /// </para>
         /// </summary> 
-        public static async Task KillProcess_ByName(params string[] args)
+        public static void KillProcess_ByName(params string[] args)
         {
-            await _processHandler.KillProcess_ByName(args);
+            _processHandler.KillProcess_ByName(args);
         }
         /// <summary>
         /// Will search trough all opened procesess and kill a process with PID and TimeCreated saved in <paramref name="fullFileName"/> .txt file if processs has same 
@@ -42,5 +42,14 @@ namespace Librac.ProcessHandlerLib
         {
             _processHandler.SaveProcessInfo(process, fullFileName);
         }
+        /// <summary>
+        /// Terminates .NET processes whose full name or command line contains a specified filter string.
+        /// </summary>
+        /// <param name="filter">A string filter used to match against the process's full name or command line. 
+        /// Only processes that contain this string in their full name or command line will be terminated.</param>
+        public static void KillDotnetProcess_ByFullNameFilter(string filter)
+        {
+            _processHandler.KillDotnetProcess_ByFullNameFilter(filter);
+        } 
     }
 }
