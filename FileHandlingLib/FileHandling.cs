@@ -52,5 +52,18 @@
         {
             _fileHandling.MoveFileTo(fileFullName, destinationFullName, overwrite);
         }
+
+        /// <summary>
+        /// Locates a specified file within a given path and copies it to the working directory. If the file is not found in the specified path, 
+        /// the search will proceed up the directory tree recursively. The search is optionally  limited to a directory named after the executing assembly.
+        /// </summary>
+        /// <param name="path">The directory path where the file search begins.</param>
+        /// <param name="fileName">The name of the file to search for and copy.</param>
+        /// <param name="limitScopeToProject">Optional. Limits the search scope to the directory named after the current executing assembly's name. Default is true.</param>
+
+        public static void FindAndCopyFileToWorkingDirectory(string path, string fileName, bool limitScopeToProject = true)
+        {
+            _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, limitScopeToProject);
+        }
     }
 }

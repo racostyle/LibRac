@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace Librac.FileHandlingLib
 {
     internal class FileHandlingMethods
     {
+        #region READONLY METHODS
         public void RemoveReadOnlyFromDirectory(string directoryPath)
         {
             if (!Directory.Exists(directoryPath))
@@ -56,7 +58,9 @@ namespace Librac.FileHandlingLib
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
+        #endregion
 
+        #region MODE AND COPY
         public void MoveFileTo(string fileFullName, string destinationFullName, bool overwrite)
         {
             if (!File.Exists(fileFullName))
@@ -91,5 +95,50 @@ namespace Librac.FileHandlingLib
                 Console.WriteLine($"An error occurred: {e.Message}");
             }
         }
+
+        #endregion
+
+        #region SEARCH FOR FILE AND COPY INTO WORKING DIRECTORY
+        internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, bool limitScopeToProject = false)
+        {
+            string assemblyName = "";
+            if (limitScopeToProject)
+                assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            FindAndCopy(path, fileName, assemblyName);
+        }
+
+        private void FindAndCopy(string path, string fileName, string assemblyName)
+        {
+            var file = Path.Combine(path, fileName);
+            try
+            {
+                if (!File.Exists(file))
+                {
+                    if (!string.IsNullOrEmpty(assemblyName))
+                    {
+                        var cd = new DirectoryInfo(path).Name;
+                        if (cd == assemblyName)
+                        {
+                            Console.WriteLine($"File: {fileName} not found. Search stopped in folder {cd}");
+                            return;
+                        }
+                    }
+                    path = Directory.GetParent(path).FullName;
+                    FindAndCopy(path, fileName, assemblyName);
+                }
+                else
+                {
+                    var targetFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+                    if (File.Exists(targetFile))
+                        File.Delete(targetFile);
+                    File.Copy(file, Path.Combine(Directory.GetCurrentDirectory(), fileName));
+                }
+            }
+            catch
+            {
+                Console.WriteLine($"File: {fileName} not found. Search stopped in {path}");
+            };
+        }
+        #endregion
     }
 }
