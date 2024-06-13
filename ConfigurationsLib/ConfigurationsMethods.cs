@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace Librac.ConfigurationsLib
 {
@@ -11,12 +12,19 @@ namespace Librac.ConfigurationsLib
         #region LOADING
         internal Dictionary<string, string>? LoadConfigurationFromFile(string fileLocation)
         {
+            var task = Task.Run(async () => await LoadConfigAsync(fileLocation));
+            task.Wait();
+            return task.Result;
+        }
+
+        private async Task<Dictionary<string,string>?> LoadConfigAsync(string fileLocation)
+        {
             if (File.Exists(fileLocation))
             {
-                string jsonData = File.ReadAllText(fileLocation);
+                await using var stream = File.OpenRead(fileLocation);
                 try
                 {
-                    using (JsonDocument doc = JsonDocument.Parse(jsonData))
+                    using (JsonDocument doc = await JsonDocument.ParseAsync(stream))
                     {
                         var dict = new Dictionary<string, string>();
                         FillDictionaryFromJsonElement(doc.RootElement, dict, string.Empty);
@@ -25,7 +33,7 @@ namespace Librac.ConfigurationsLib
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    Console.WriteLine(ex.ToString());
                 }
             }
             return null;
