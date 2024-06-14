@@ -106,7 +106,7 @@ namespace Librac.ProcessHandlerLib
 
                 builder.Append($"$_.ProcessName -notlike '*{notLike[i].Replace("!", string.Empty)}*'");
                 if (i < notLike.Length - 1)
-                    builder.Append(" -or ");
+                    builder.Append(" -and ");
             }
 
             builder.Append(") } | Stop-Process -Force\r\n");
