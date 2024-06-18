@@ -51,5 +51,15 @@ namespace Librac.ProcessHandlerLib
         {
             _processHandler.KillDotnetProcess_ByFullNameFilter(filter);
         } 
+
+        /// <summary>
+        /// ble ble ble
+        /// </summary>
+        /// <param name="ports"></param>
+
+        public static void KillProcess_ByTcpPortsListened(params int[] ports)
+        {
+            _processHandler.Kill_ProcessByTcpPortListened(ports);
+        }
     }
 }

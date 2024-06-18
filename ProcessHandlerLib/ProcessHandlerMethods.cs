@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Librac.ProcessHandlerLib
 {
     internal class ProcessHandlerMethods : IProcessHandler
     {
+        private readonly ShellCommands shellCommands = new ShellCommands();
+
         internal readonly int PID = 0;
         internal readonly int CREATON_TIME = 1;
 
-        #region KILL PROCESS BY PID AND CRATE TIME
         public void KillProcess_ByPIDAndTimeCreated(string fullFileName)
         {
             if (!File.Exists(fullFileName))
@@ -71,77 +70,24 @@ namespace Librac.ProcessHandlerLib
             }
             return new string[] { };
         }
-        #endregion
 
-        #region KILL PROCESS BY NAME
         public void KillProcess_ByName(params string[] args)
         {
-            var command = GenerateDeleteProcesesByNameCommand(args);
+            var command = shellCommands.Get_DeleteProcesesByNameCommand(args);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
-        /// <summary>
-        /// Generates a PowerShell command to forcefully terminate processes by name, allowing for inclusion (name matches) and exclusion (name does not match prefixed with "!") criteria.
-        /// <para>
-        /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
-        /// </para>
-        /// </summary> 
-        private string GenerateDeleteProcesesByNameCommand(params string[] args)
-        {
-            var like = args.Where(x => !x.StartsWith("!")).Distinct().ToArray();
-            var notLike = args.Where(x => x.StartsWith("!")).Distinct().ToArray();
-
-            var builder = new StringBuilder();
-            builder.Append("Get-Process | Where-Object { (");
-            for (int i = 0; i < like.Length; i++)
-            {
-                builder.Append($"$_.ProcessName -like '*{like[i]}*'");
-                if (i < like.Length - 1)
-                    builder.Append(" -or ");
-            }
-            if (notLike.Any())
-                builder.Append(") -and (");
-            for (int i = 0; i < notLike.Length; i++)
-            {
-
-                builder.Append($"$_.ProcessName -notlike '*{notLike[i].Replace("!", string.Empty)}*'");
-                if (i < notLike.Length - 1)
-                    builder.Append(" -and ");
-            }
-
-            builder.Append(") } | Stop-Process -Force\r\n");
-            return builder.ToString();
-        }
-        #endregion
-
-        #region KILL PROCESESS BY FILTERING FULL NAME
-
         public void KillDotnetProcess_ByFullNameFilter(string filter)
         {
-            var script = GenerateKillProcessByOwnerNameCommand(filter).Replace("\"", "\\\"");
-            Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
+            var command = shellCommands.Get_KillProcessByOwnerNameCommand(filter);
+            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
-        private string GenerateKillProcessByOwnerNameCommand(string processName)
+        public void Kill_ProcessByTcpPortListened(params int[] ports)
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("$processes = Get-WmiObject Win32_Process -Filter \"Name = 'dotnet.exe'\"");
-            sb.AppendLine("foreach ($process in $processes) {");
-            sb.AppendLine("    $ownerInfo = $process.GetOwner().User");
-            sb.AppendLine("    if ($process.CommandLine -and $process.CommandLine -like '*" + processName + "*') {");
-            sb.AppendLine("        Write-Host \"Terminating process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo\"");
-            sb.AppendLine("        try {");
-            sb.AppendLine("            $proc = Get-Process -Id $process.ProcessId");
-            sb.AppendLine("            $proc.Kill()");
-            sb.AppendLine("            Write-Host 'Process terminated successfully.'");
-            sb.AppendLine("        } catch {");
-            sb.AppendLine("            Write-Host \"Failed to terminate process: $_\"");
-            sb.AppendLine("        }");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-            return sb.ToString();
+            var script = shellCommands.Get_KillByTcpPortsScript(ports);
+            Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
         }
-        #endregion
 
         #region EXECUTOR 
         private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
