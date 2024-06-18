@@ -1,4 +1,6 @@
-﻿namespace Librac.FileHandlingLib
+﻿using System.Reflection;
+
+namespace Librac.FileHandlingLib
 {
     /// <summary>
     /// LIbrary for dealing with files
@@ -66,14 +68,16 @@
             _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, limitScopeToProject);
         }
         /// <summary>
-        /// Retrieves the directory path of the currently executing assembly.
+        /// Retrieves the directory path of the specified executing assembly within the given working directory.
         /// </summary>
+        /// <param name="currentWorkingDirectory">The working directory in which to search for the assembly name.</param>
+        /// <param name="execuatingAssembly">The assembly for which the directory path is required.</param>
         /// <returns>
-        /// A string containing the path of the directory where the executing assembly is located.
+        /// A string containing the path of the directory where the specified executing assembly is located.
         /// This path includes the assembly name as the last folder in the path.
-        public static string FindAssemblyDirectory()
+        public static string FindAssemblyDirectory(string currentWorkingDirectory, Assembly executingAssembly)
         {
-            return _fileHandling.GetAssemblyDirectory();
+            return _fileHandling.GetAssemblyDirectory(currentWorkingDirectory, executingAssembly);
         }
     }
 }

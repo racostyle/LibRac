@@ -99,12 +99,11 @@ namespace Librac.FileHandlingLib
         #endregion
 
         #region SEARCH FOR FILE AND COPY INTO WORKING DIRECTORY
-        internal string GetAssemblyDirectory()
+        internal string GetAssemblyDirectory(string currentWorkingDirectory, Assembly executingAssembly)
         {
-            string assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-            var path = Directory.GetCurrentDirectory();
-            var index = path.IndexOf(assemblyName) + assemblyName.Length;
-            return path.Substring(0, index);
+            string assemblyName = executingAssembly.GetName().Name;
+            var index = currentWorkingDirectory.IndexOf(assemblyName) + assemblyName.Length;
+            return currentWorkingDirectory.Substring(0, index);
         }
 
         internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, bool limitScopeToProject = false)
