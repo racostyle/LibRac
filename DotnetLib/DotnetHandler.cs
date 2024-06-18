@@ -8,7 +8,7 @@ namespace Librac.DotnetLib
     /// <summary>
     /// Class for executing dll assembly
     /// </summary>
-    public static class Dotnet
+    public static class DotnetHandler
     {
         private static readonly DotnetMethods _dotnet = new DotnetMethods();
         /// <summary>

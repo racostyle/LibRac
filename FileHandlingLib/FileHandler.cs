@@ -3,7 +3,7 @@
     /// <summary>
     /// LIbrary for dealing with files
     /// </summary>
-    public static class FileHandling 
+    public static class FileHandler 
     {
         private static readonly FileHandlingMethods _fileHandling = new FileHandlingMethods();
         /// <summary>
