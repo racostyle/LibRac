@@ -61,7 +61,7 @@ namespace Librac.FileHandlingLib
         /// </summary>
         /// <param name="path">The directory path where the file search begins.</param>
         /// <param name="fileName">The name of the file to search for and copy.</param>
-        /// <param name="assemblyName">The current executing assembly for which the directory path is required.</param>
+        /// <param name="assemblyName">The current executing assembly for which the directory path is required. In general use: Assembly.GetExecutingAssembly().GetName().Name</param>
 
         public static void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName)
         {
@@ -71,7 +71,7 @@ namespace Librac.FileHandlingLib
         /// Retrieves the directory path of the specified executing assembly within the given working directory.
         /// </summary>
         /// <param name="currentWorkingDirectory">The working directory in which to search for the assembly name.</param>
-        /// <param name="assemblyName">The current executing assembly for which the directory path is required.</param>
+        /// <param name="assemblyName">The current executing assembly for which the directory path is required. In general use: Assembly.GetExecutingAssembly().GetName().Name</param>
         /// <returns>
         /// A string containing the path of the directory where the specified executing assembly is located.
         /// This path includes the assembly name as the last folder in the path.

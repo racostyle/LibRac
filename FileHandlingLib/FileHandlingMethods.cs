@@ -99,9 +99,8 @@ namespace Librac.FileHandlingLib
         #endregion
 
         #region SEARCH FOR FILE AND COPY INTO WORKING DIRECTORY
-        internal string GetAssemblyDirectory(string currentWorkingDirectory, Assembly executingAssembly)
+        internal string GetAssemblyDirectory(string currentWorkingDirectory, string assemblyName)
         {
-            string assemblyName = executingAssembly.GetName().Name;
             var index = currentWorkingDirectory.IndexOf(assemblyName) + assemblyName.Length;
             return currentWorkingDirectory.Substring(0, index);
         }
