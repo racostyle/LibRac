@@ -65,5 +65,15 @@
         {
             _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, limitScopeToProject);
         }
+        /// <summary>
+        /// Retrieves the directory path of the currently executing assembly.
+        /// </summary>
+        /// <returns>
+        /// A string containing the path of the directory where the executing assembly is located.
+        /// This path includes the assembly name as the last folder in the path.
+        public static string FindAssemblyDirectory()
+        {
+            return _fileHandling.GetAssemblyDirectory();
+        }
     }
 }

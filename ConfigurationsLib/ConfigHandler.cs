@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Librac.ConfigurationsLib
 {
     /// <summary>
     /// Provides methods for loading and saving configuration settings to and from a file.
     /// </summary>
-    public static class Configurations
+    public static class ConfigHandler
     {
         private static ConfigurationsMethods _configurationMethods = new ConfigurationsMethods();
 
