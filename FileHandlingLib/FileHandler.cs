@@ -61,23 +61,23 @@ namespace Librac.FileHandlingLib
         /// </summary>
         /// <param name="path">The directory path where the file search begins.</param>
         /// <param name="fileName">The name of the file to search for and copy.</param>
-        /// <param name="limitScopeToProject">Optional. Limits the search scope to the directory named after the current executing assembly's name. Default is true.</param>
+        /// <param name="assemblyName">The current executing assembly for which the directory path is required.</param>
 
-        public static void FindAndCopyFileToWorkingDirectory(string path, string fileName, bool limitScopeToProject = true)
+        public static void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName)
         {
-            _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, limitScopeToProject);
+            _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, assemblyName);
         }
         /// <summary>
         /// Retrieves the directory path of the specified executing assembly within the given working directory.
         /// </summary>
         /// <param name="currentWorkingDirectory">The working directory in which to search for the assembly name.</param>
-        /// <param name="execuatingAssembly">The assembly for which the directory path is required.</param>
+        /// <param name="assemblyName">The current executing assembly for which the directory path is required.</param>
         /// <returns>
         /// A string containing the path of the directory where the specified executing assembly is located.
         /// This path includes the assembly name as the last folder in the path.
-        public static string FindAssemblyDirectory(string currentWorkingDirectory, Assembly executingAssembly)
+        public static string FindAssemblyDirectory(string currentWorkingDirectory, string assemblyName)
         {
-            return _fileHandling.GetAssemblyDirectory(currentWorkingDirectory, executingAssembly);
+            return _fileHandling.GetAssemblyDirectory(currentWorkingDirectory, assemblyName);
         }
     }
 }

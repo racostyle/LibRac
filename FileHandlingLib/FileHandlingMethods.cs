@@ -106,11 +106,8 @@ namespace Librac.FileHandlingLib
             return currentWorkingDirectory.Substring(0, index);
         }
 
-        internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, bool limitScopeToProject = false)
+        internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName = "")
         {
-            string assemblyName = "";
-            if (limitScopeToProject)
-                assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             FindAndCopy(path, fileName, assemblyName);
         }
 
@@ -135,10 +132,18 @@ namespace Librac.FileHandlingLib
                 }
                 else
                 {
-                    var targetFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-                    if (File.Exists(targetFile))
-                        File.Delete(targetFile);
-                    File.Copy(file, Path.Combine(Directory.GetCurrentDirectory(), fileName));
+                    if (path == Directory.GetCurrentDirectory()) //safetycheck
+                    {
+                        path = Directory.GetParent(path).FullName;
+                        FindAndCopy(path, fileName, assemblyName);
+                    }
+                    else
+                    {
+                        var targetFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+                        if (File.Exists(targetFile))
+                            File.Delete(targetFile);
+                        File.Copy(file, Path.Combine(Directory.GetCurrentDirectory(), fileName));
+                    }
                 }
             }
             catch
