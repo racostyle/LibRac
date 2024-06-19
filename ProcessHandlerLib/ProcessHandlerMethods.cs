@@ -12,7 +12,7 @@ namespace Librac.ProcessHandlerLib
         internal readonly int PID = 0;
         internal readonly int CREATON_TIME = 1;
 
-        public void KillProcess_ByPIDAndTimeCreated(string fullFileName)
+        public void Kill_Process_ByPIDAndTimeCreated(string fullFileName)
         {
             if (!File.Exists(fullFileName))
                 return;
@@ -71,25 +71,31 @@ namespace Librac.ProcessHandlerLib
             return new string[] { };
         }
 
-        public void KillProcess_ByName(params string[] args)
+        public void Kill_Process_ByName(params string[] args)
         {
-            var command = shellCommands.Get_DeleteProcesesByNameCommand(args);
+            var command = shellCommands.Get_KillProcesesByName(args);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
-        public void KillDotnetProcess_ByFullNameFilter(string filter)
+        public void Kill_DotnetProcess_ByFullNameFilter(string filter)
         {
-            var command = shellCommands.Get_KillProcessByOwnerNameCommand(filter);
+            var command = shellCommands.Get_KillDotnetProcessByOwnerName(filter);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
-        public void Kill_ProcessByTcpPortListened(params int[] ports)
+        public void Kill_CurrentUserProcess_ByFullNameFilter(string filter)
         {
-            var script = shellCommands.Get_KillByTcpPortsScript(ports);
+            var command = shellCommands.Get_KillCurrentUserProcessByOwnerName(filter);
+            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
+        }
+
+        public void Kill_Process_ByTcpPortListened(params int[] ports)
+        {
+            var script = shellCommands.Get_KillByTcpPorts(ports);
             Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
         }
 
-        #region EXECUTOR 
+        #region POWERSHELL EXECUTOR 
         private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
         {
             ProcessStartInfo info = new ProcessStartInfo

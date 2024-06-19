@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Librac.FileHandlingLib
 {
-    internal class FileHandlingMethods
+    internal class FileHandlerMethods
     {
         #region READONLY METHODS
         public void RemoveReadOnlyFromDirectory(string directoryPath)

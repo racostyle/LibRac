@@ -7,7 +7,7 @@ namespace Librac.FileHandlingLib
     /// </summary>
     public static class FileHandler 
     {
-        private static readonly FileHandlingMethods _fileHandling = new FileHandlingMethods();
+        private static readonly FileHandlerMethods _fileHandling = new FileHandlerMethods();
         /// <summary>
         /// Sets the ReadOnly attribute to all files in the specified directory and its subdirectories.
         /// </summary>
