@@ -12,6 +12,45 @@ namespace Librac.ProcessHandlerLib
         internal readonly int PID = 0;
         internal readonly int CREATON_TIME = 1;
 
+        #region POWERSHELL EXECUTOR 
+        private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
+        {
+            ProcessStartInfo info = new ProcessStartInfo
+            {
+                FileName = "powershell",
+                Arguments = command,
+                Verb = asAdmin ? "runAs" : string.Empty,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (Process process = new Process())
+            {
+                process.StartInfo = info;
+                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+                process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                await WaitForExitAsync(process);
+            }
+        }
+
+        private Task WaitForExitAsync(Process process)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            process.Exited += (sender, args) =>
+            {
+                tcs.SetResult(true);
+            };
+            process.EnableRaisingEvents = true;
+            return tcs.Task;
+        }
+        #endregion
+
         public void Kill_Process_ByPIDAndTimeCreated(string fullFileName)
         {
             if (!File.Exists(fullFileName))
@@ -94,37 +133,6 @@ namespace Librac.ProcessHandlerLib
             var script = shellCommands.Get_KillByTcpPorts(ports);
             Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
         }
-
-        #region POWERSHELL EXECUTOR 
-        private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
-        {
-            ProcessStartInfo info = new ProcessStartInfo
-            {
-                FileName = "powershell",
-                Arguments = command,
-                Verb = asAdmin ? "runAs" : string.Empty,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using (Process process = new Process())
-            {
-                process.StartInfo = info;
-                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
-                process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
-
-                await Task.Run(() =>
-                {
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-                    process.WaitForExit();
-                });
-            }
-        }
-        #endregion
 
         #region AUXILIARY
         internal async Task FindProcesesByWindowStyle()
