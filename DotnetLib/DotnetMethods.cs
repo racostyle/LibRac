@@ -10,12 +10,13 @@ namespace Librac.DotnetLib
         public string[] Run_LaunchAssembly(
             IProcessHandler? processHandler,
             string assemblyPath,
+            string args = "",
             bool hideWindow = false,
             bool runAsAdmin = false,
             string infoSaveLocation = "",
             Action? callback = null)
         {
-            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, hideWindow, runAsAdmin);
+            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, args, hideWindow, runAsAdmin);
 
             var process = new Process();
             process.StartInfo = startInfo;
@@ -46,14 +47,14 @@ namespace Librac.DotnetLib
 
         public async Task Run_ExecuteAssemblyAsync(
             string assemblyPath,
+            string args = "",
             bool hideWindow = false,
             bool runAsAdmin = false,
-            string args = "",
             Action? callback = null)
         {
             string result = string.Empty;
 
-            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, hideWindow, runAsAdmin);
+            ProcessStartInfo startInfo = CreateStartInfo(assemblyPath, args, hideWindow, runAsAdmin);
 
             var tcs = new TaskCompletionSource<bool>();
             using (var process = new Process())
@@ -87,7 +88,7 @@ namespace Librac.DotnetLib
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet", // Use the dotnet runtime
-                Arguments = $"{assemblyPath} {args}",
+                Arguments = string.IsNullOrEmpty(args) ? $"\"{assemblyPath}\"" : $"\"{assemblyPath}\" \"{args}\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
@@ -117,12 +118,12 @@ namespace Librac.DotnetLib
         }
 
         #region AUXILARY
-        private static ProcessStartInfo CreateStartInfo(string assemblyPath, bool hideWindow, bool runAsAdmin)
+        private static ProcessStartInfo CreateStartInfo(string assemblyPath, string args,  bool hideWindow, bool runAsAdmin)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = assemblyPath,
+                Arguments = string.IsNullOrEmpty(args) ? $"\"{assemblyPath}\"" : $"\"{assemblyPath}\" \"{args}\"",
                 UseShellExecute = !hideWindow, //if hideWindow = true it must be false to redirect output
                 CreateNoWindow = hideWindow,
                 RedirectStandardOutput = hideWindow,
