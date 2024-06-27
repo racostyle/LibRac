@@ -89,6 +89,9 @@ namespace Librac.TextLib
                 newt = newText.Where(x => !string.IsNullOrWhiteSpace(x)).Reverse().ToArray();
             }
 
+            if (oldt.Length == 0)
+                return newt.Reverse().ToArray();
+
             while (localThreshold > 0)
             {
                 if (oldt[index_old] == newt[index_new])
