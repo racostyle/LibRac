@@ -118,13 +118,13 @@ namespace Librac.ProcessHandlerLib
 
         public void Kill_DotnetProcess_ByFullNameFilter(string filter)
         {
-            var command = shellCommands.Get_KillDotnetProcessByOwnerName(filter);
+            var command = shellCommands.Get_KillDotnetProcessByFullProcessNameFilter(filter);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
         public void Kill_CurrentUserProcess_ByFullNameFilter(string filter)
         {
-            var command = shellCommands.Get_KillCurrentUserProcessByOwnerName(filter);
+            var command = shellCommands.Get_KillCurrentUserProcessByFullProcessNameFilter(filter);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 

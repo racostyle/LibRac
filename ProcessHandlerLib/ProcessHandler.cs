@@ -43,7 +43,7 @@ namespace Librac.ProcessHandlerLib
             _processHandler.SaveProcessInfo(process, fullFileName);
         }
         /// <summary>
-        /// Terminates .NET processes whose full name or command line contains a specified filter string.
+        /// Terminates .NET processes whose full name or command line (full name of executing process) contains a specified filter string.
         /// </summary>
         /// <param name="filter">A string filter used to match against the process's full name or command line. 
         /// Only processes that contain this string in their full name or command line will be terminated.</param>
@@ -53,7 +53,7 @@ namespace Librac.ProcessHandlerLib
         }
 
         /// <summary>
-        /// Terminates processes whose full name or command line contains a specified filter string and are owned by the current user.
+        /// Terminates processes whose full name or command line (full name of executing process) contains a specified filter string and are owned by the current user.
         /// </summary>
         /// <param name="filter">The filter to apply to the process names. Only processes whose command line includes this filter and are owned by the current user will be terminated.</param>
         /// <remarks>

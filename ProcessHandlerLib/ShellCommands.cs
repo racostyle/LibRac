@@ -35,7 +35,7 @@ namespace Librac.ProcessHandlerLib
             }}";
         }
 
-        internal string Get_KillDotnetProcessByOwnerName(string processName)
+        internal string Get_KillDotnetProcessByFullProcessNameFilter(string processName)
         {
             string command = $@"
             {ExecutionPolicySafetycheck}
@@ -65,7 +65,7 @@ namespace Librac.ProcessHandlerLib
             return command.Replace("\"", "\\\"");
         }
 
-        internal string Get_KillCurrentUserProcessByOwnerName(string processName, string userName = null)
+        internal string Get_KillCurrentUserProcessByFullProcessNameFilter(string processName, string userName = null)
         {
             string command = $@"
             {ExecutionPolicySafetycheck}
