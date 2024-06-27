@@ -105,13 +105,24 @@ namespace Librac.FileHandlingLib
             return currentWorkingDirectory.Substring(0, index);
         }
 
-        internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName = "")
+        internal void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName = "", bool overwrite = false)
         {
+            if (!overwrite)
+            {
+                if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), fileName)))
+                    return;
+            }
             FindAndCopy(path, fileName, assemblyName);
         }
 
         private void FindAndCopy(string path, string fileName, string assemblyName)
         {
+            if (path == Directory.GetCurrentDirectory()) //safetycheck
+            {
+                path = Directory.GetParent(path).FullName;
+                FindAndCopy(path, fileName, assemblyName);
+                return;
+            }
             var file = Path.Combine(path, fileName);
             try
             {
@@ -131,18 +142,10 @@ namespace Librac.FileHandlingLib
                 }
                 else
                 {
-                    if (path == Directory.GetCurrentDirectory()) //safetycheck
-                    {
-                        path = Directory.GetParent(path).FullName;
-                        FindAndCopy(path, fileName, assemblyName);
-                    }
-                    else
-                    {
-                        var targetFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-                        if (File.Exists(targetFile))
-                            File.Delete(targetFile);
-                        File.Copy(file, Path.Combine(Directory.GetCurrentDirectory(), fileName));
-                    }
+                    var targetFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+                    if (File.Exists(targetFile))
+                        File.Delete(targetFile);
+                    File.Copy(file, Path.Combine(Directory.GetCurrentDirectory(), fileName));
                 }
             }
             catch

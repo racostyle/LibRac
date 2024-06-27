@@ -3,9 +3,9 @@
 namespace Librac.FileHandlingLib
 {
     /// <summary>
-    /// LIbrary for dealing with files
+    /// Library for dealing with files
     /// </summary>
-    public static class FileHandler 
+    public static class FileHandler
     {
         private static readonly FileHandlerMethods _fileHandling = new FileHandlerMethods();
         /// <summary>
@@ -37,7 +37,7 @@ namespace Librac.FileHandlingLib
         /// </remarks>
         public static void CopyFileTo(string fileFullName, string destinationFullName, bool overwrite)
         {
-            _fileHandling.CopyFileTo(fileFullName, destinationFullName, overwrite); 
+            _fileHandling.CopyFileTo(fileFullName, destinationFullName, overwrite);
         }
         /// <summary>
         /// Moves a file to a specified destination, optionally overwriting the destination file.
@@ -59,25 +59,29 @@ namespace Librac.FileHandlingLib
         /// Locates a specified file within a given path and copies it to the working directory. If the file is not found in the specified path, 
         /// the search will proceed up the directory tree recursively. The search is optionally  limited to a directory named after the executing assembly.
         /// </summary>
-        /// <param name="path">The directory path where the file search begins.</param>
+        /// <param name="startPath">The directory path where the file search begins.</param>
         /// <param name="fileName">The name of the file to search for and copy.</param>
-        /// <param name="assemblyName">The current executing assembly for which the directory path is required. In general use: Assembly.GetExecutingAssembly().GetName().Name</param>
-
-        public static void FindAndCopyFileToWorkingDirectory(string path, string fileName, string assemblyName)
+        /// <param name="assembly">Optional: The current executing assembly. This will limit search at the root folder of the assembly. Default is null</param>
+        /// <param name="overwrite">Optional: If set to false and file exist in working directory it will not overwrite stated file. Default is false</param>
+        public static void FindAndCopyFileToWorkingDirectory(string startPath, string fileName, Assembly? assembly = null, bool overwrite = false)
         {
-            _fileHandling.FindAndCopyFileToWorkingDirectory(path, fileName, assemblyName);
+            string assemblyName = "";
+            if (assembly != null)
+                assemblyName = assembly.GetName().Name;
+           
+            _fileHandling.FindAndCopyFileToWorkingDirectory(startPath, fileName, assemblyName, overwrite);
         }
         /// <summary>
         /// Retrieves the directory path of the specified executing assembly within the given working directory.
         /// </summary>
-        /// <param name="currentWorkingDirectory">The working directory in which to search for the assembly name.</param>
-        /// <param name="assemblyName">The current executing assembly for which the directory path is required. In general use: Assembly.GetExecutingAssembly().GetName().Name</param>
+        /// <param name="workingDirectory">The working directory in which to search for the assembly name.</param>
+        /// <param name="assembly">The current executing assembly for which the directory path is required. In general use: Assembly.GetExecutingAssembly().GetName().Name</param>
         /// <returns>
         /// A string containing the path of the directory where the specified executing assembly is located.
         /// This path includes the assembly name as the last folder in the path.
-        public static string FindAssemblyDirectory(string currentWorkingDirectory, string assemblyName)
+        public static string FindAssemblyDirectory(string workingDirectory, Assembly assembly)
         {
-            return _fileHandling.GetAssemblyDirectory(currentWorkingDirectory, assemblyName);
+            return _fileHandling.GetAssemblyDirectory(workingDirectory, assembly.GetName().Name);
         }
     }
 }
