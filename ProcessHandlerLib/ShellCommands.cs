@@ -65,7 +65,15 @@ namespace Librac.ProcessHandlerLib
             return command.Replace("\"", "\\\"");
         }
 
-        internal string Get_KillCurrentUserProcessByFullProcessNameFilter(string processName, string userName = null)
+        internal string Get_KillProcessByFullNameFilter(string processName, bool limitScopeToCurrentUser = true)
+        {
+            if (limitScopeToCurrentUser)
+                return Get_KillCurrentUserProcessByFullNameFilter(processName);
+            else
+                return Get_KillAnyProcessByFullNameFilter(processName);
+        }
+
+        private string Get_KillCurrentUserProcessByFullNameFilter(string processName)
         {
             string command = $@"
             {ExecutionPolicySafetycheck}
@@ -89,6 +97,33 @@ namespace Librac.ProcessHandlerLib
                 }}
                 if (-not $found) {{
                     Write-Host 'No matching processes found to terminate for the current user.'
+                }}
+            }} catch {{
+                Write-Host ""Failed to execute script: $($_.Exception.Message)""
+            }}";
+            return command.Replace("\"", "\\\"");
+        }
+
+        private string Get_KillAnyProcessByFullNameFilter(string processName)
+        {
+            string command = $@"
+            {ExecutionPolicySafetycheck}
+            try {{
+                $processes = Get-WmiObject Win32_Process | Where-Object {{ $_.CommandLine -and $_.CommandLine -like '*{processName}*' }}
+                $found = $false
+                foreach ($process in $processes) {{
+                    $found = $true
+                    Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId)""
+                    try {{
+                        $proc = Get-Process -Id $process.ProcessId
+                        $proc.Kill()
+                        Write-Host 'Process terminated successfully.'
+                    }} catch {{
+                        Write-Host ""Failed to terminate process: $($_.Exception.Message)""
+                    }}
+                }}
+                if (-not $found) {{
+                    Write-Host 'No matching processes found to terminate.'
                 }}
             }} catch {{
                 Write-Host ""Failed to execute script: $($_.Exception.Message)""

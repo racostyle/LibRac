@@ -122,9 +122,9 @@ namespace Librac.ProcessHandlerLib
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 
-        public void Kill_CurrentUserProcess_ByFullNameFilter(string filter)
+        public void Kill_Process_ByFullNameFilter(string filter, bool limitScopeToCurrentUser = true)
         {
-            var command = shellCommands.Get_KillCurrentUserProcessByFullProcessNameFilter(filter);
+            var command = shellCommands.Get_KillProcessByFullNameFilter(filter, limitScopeToCurrentUser);
             Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
         }
 

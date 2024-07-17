@@ -55,14 +55,15 @@ namespace Librac.ProcessHandlerLib
         /// <summary>
         /// Terminates processes whose full name or command line (full name of executing process) contains a specified filter string and are owned by the current user.
         /// </summary>
-        /// <param name="filter">The filter to apply to the process names. Only processes whose command line includes this filter and are owned by the current user will be terminated.</param>
+        /// <param name="filter">Terminates process which full name contain filter parameter. For example, it can be a folder where .exe or process name</param>
+        /// <param name="limitScopeToCurrentUser">Will only terminate the procesess owned by current user. Default = true</param>
         /// <remarks>
         /// This method uses Windows Management Instrumentation (WMI) to query active processes and matches the command line of each process against the provided filter. 
         /// It ensures that only processes owned by the current user are targeted for termination, minimizing the risk of affecting system or other user's processes.
         /// </remarks>
-        public static void Kill_CurrentUserProcess_ByFullNameFilter(string filter)
+        public static void Kill_Process_ByFullNameFilter(string filter, bool limitScopeToCurrentUser = true)
         {
-            _processHandler.Kill_CurrentUserProcess_ByFullNameFilter(filter);
+            _processHandler.Kill_Process_ByFullNameFilter(filter, limitScopeToCurrentUser);
         }
 
         /// <summary>
