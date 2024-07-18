@@ -19,7 +19,6 @@ namespace Librac.ProcessHandlerLib
             try {{
                 $processDetail = Get-Process -Id $proc.OwningProcess;
                 if ($processDetail) {{
-                    Write-Host ""Attempting to terminate process $($processDetail.Name) on port $($proc.LocalPort)""
                     $processDetail | Stop-Process -Force;
                     Write-Host 'Process terminated successfully.'
                 }} else {{
@@ -46,11 +45,10 @@ namespace Librac.ProcessHandlerLib
                 $ownerInfo = $process.GetOwner().User
                     if ($process.CommandLine -and $process.CommandLine -like '*{processName}*') {{
                         $found = $true
-                        Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo""
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
                             $proc.Kill()
-                            Write-Host 'Process terminated successfully.'
+                             Write-Host ""Process with id $process.ProcessId terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -85,11 +83,10 @@ namespace Librac.ProcessHandlerLib
                     $ownerInfo = $process.GetOwner().User
                     if ($ownerInfo -eq $currentUser) {{
                         $found = $true
-                        Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo""
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
                             $proc.Kill()
-                            Write-Host 'Process terminated successfully.'
+                             Write-Host ""Process with id $process.ProcessId terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -113,11 +110,10 @@ namespace Librac.ProcessHandlerLib
                 $found = $false
                 foreach ($process in $processes) {{
                     $found = $true
-                    Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId)""
                     try {{
                         $proc = Get-Process -Id $process.ProcessId
                         $proc.Kill()
-                        Write-Host 'Process terminated successfully.'
+                        Write-Host ""Process with id $process.ProcessId terminated successfully.""
                     }} catch {{
                         Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                     }}
