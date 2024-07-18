@@ -157,8 +157,7 @@ namespace Librac.ProcessHandlerLib
                 if (i < notLike.Length - 1)
                     builder.Append(" -and ");
             }
-
-            builder.Append(") } | Stop-Process -Force\r\n");
+            builder.Append(") } | ForEach-Object { Stop-Process -Id $_.Id -Force; Write-Host \"Process killed: $($_.ProcessName) with ID $($_.Id)\" }\r\n");
             return builder.ToString();
         }
     }
