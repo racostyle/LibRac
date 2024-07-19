@@ -137,6 +137,12 @@ namespace Librac.ProcessHandlerLib
             return result;
         }
 
+        public string Kill_Process_ByName_FastUnsafe(params string[] args)
+        {
+            var command = shellCommands.Get_KillProcesesByName_FastUnsafe(args);
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
+        }
+
         public string Kill_Process_ByName(bool limitScopeToCurrentUser = true, params string[] args)
         {
             var command = shellCommands.Get_KillProcesesByName(limitScopeToCurrentUser, args);

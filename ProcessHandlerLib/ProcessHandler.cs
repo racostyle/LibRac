@@ -12,10 +12,22 @@ namespace Librac.ProcessHandlerLib
         /// <summary>
         /// Generates a PowerShell command to forcefully terminate processes by name, allowing for inclusion (name matches) and exclusion (name does not match prefixed with "!") criteria. 
         /// After Runs a powershell script and executes said command. It will kill all proceses which respect naming conditions
+        /// <param name="args">strings which will determing correct processes to terminate</param>
+        /// <para>
+        /// Example of arguments: ("test", "gui", "!production") will generate a script that kills all processes that contain "test" and/or "gui" but do not contain "production"
+        /// </para>
+        /// </summary> 
+        public static string Kill_Process_ByName_FastUnsafe(params string[] args)
+        {
+            return _processHandler.Kill_Process_ByName_FastUnsafe(args);
+        }
+        /// <summary>
+        /// Generates a PowerShell command to forcefully terminate processes by name, allowing for inclusion (name matches) and exclusion (name does not match prefixed with "!") criteria. 
+        /// After Runs a powershell script and executes said command. It will kill all proceses which respect naming conditions
         /// <param name="limitScopeToCurrentUser">Will only terminate the procesess owned by current user. Default = true</param>
         /// <param name="args">strings which will determing correct processes to terminate</param>
         /// <para>
-        /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
+        /// Example of arguments: ("test", "gui", "!production") will generate a script that kills all processes that contain "test" and/or "gui" but do not contain "production"
         /// </para>
         /// </summary> 
         public static string Kill_Process_ByName(bool limitScopeToCurrentUser = true, params string[] args)

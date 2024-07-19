@@ -137,7 +137,7 @@ namespace Librac.ProcessHandlerLib
         /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
         /// </para>
         /// </summary> 
-        internal string Get_KillProcesesByName(bool limitScopeToCurrentUser = true, params string[] args)
+        internal string Get_KillProcesesByName_FastUnsafe(params string[] args)
         {
             var like = args.Where(x => !x.StartsWith("!")).Distinct().ToArray();
             var notLike = args.Where(x => x.StartsWith("!")).Distinct().ToArray();
@@ -163,6 +163,54 @@ namespace Librac.ProcessHandlerLib
             }
             builder.Append(") } | ForEach-Object { Stop-Process -Id $_.Id -Force; Write-Host \"Process killed: $($_.ProcessName) with ID $($_.Id)\" }\r\n");
             return builder.ToString();
+        }
+
+        internal string Get_KillProcesesByName(bool limitScopeToCurrentUser = true, params string[] args)
+        {
+            var like = args.Where(x => !x.StartsWith("!")).Distinct().Select(x => $"$_.ProcessName -like '*{x}*'").ToArray();
+            var notLike = args.Where(x => x.StartsWith("!")).Distinct().Select(x => $"$_.ProcessName -notlike '*{x.Replace("!", string.Empty)}*'").ToArray();
+
+            if (like.Length == 0)
+                return "Write-Host \"At least one parameter needs to be provided and at least one parameter needs to be without '!'\"";
+
+            var executingCommand = new StringBuilder();
+            if (limitScopeToCurrentUser)
+                executingCommand.Append("$_.GetOwner().User -eq $currentUser -and ");
+            if (like.Length > 0)
+                executingCommand.Append($"({string.Join(" -or ", like)})");
+            if (notLike.Length > 0)
+                executingCommand.Append($" -and ({string.Join(" -and ", notLike)})");
+
+            string command = @$"
+            $currentUser = $env:USERNAME
+            try {{
+                $processes = Get-WmiObject Win32_Process | Where-Object {{
+                    try {{
+                        {executingCommand.ToString()}
+                    }} catch {{
+                        $false
+                    }}
+                }}
+                $found = $false
+                foreach ($process in $processes) {{
+                    $found = $true
+                    try {{
+                        $proc = Get-Process -Id $process.ProcessId
+                        $procName = $proc.Name
+                        $proc.Kill()
+                        Write-Host ""Process with name $procName terminated successfully.""
+                    }} catch {{
+                        Write-Host ""Failed to terminate process: $($_.Exception.Message)""
+                    }}
+                }}
+                if (-not $found) {{
+                    Write-Host 'No matching processes found to terminate.'
+                }}
+            }} catch {{
+                Write-Host ""Failed to execute script: $($_.Exception.Message)""
+            }} ";
+
+            return command.Replace("\"", "\\\"");
         }
     }
 }
