@@ -137,9 +137,9 @@ namespace Librac.ProcessHandlerLib
             return result;
         }
 
-        public string Kill_Process_ByName(params string[] args)
+        public string Kill_Process_ByName(bool limitScopeToCurrentUser = true, params string[] args)
         {
-            var command = shellCommands.Get_KillProcesesByName(args);
+            var command = shellCommands.Get_KillProcesesByName(limitScopeToCurrentUser, args);
             return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
         }
 

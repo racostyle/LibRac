@@ -47,8 +47,9 @@ namespace Librac.ProcessHandlerLib
                         $found = $true
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
+                            $procName = $proc.Name
                             $proc.Kill()
-                             Write-Host ""Process with id $process.ProcessId terminated successfully.""
+                            Write-Host ""Process with name $procName terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -85,8 +86,9 @@ namespace Librac.ProcessHandlerLib
                         $found = $true
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
+                            $procName = $proc.Name
                             $proc.Kill()
-                             Write-Host ""Process with id $process.ProcessId terminated successfully.""
+                            Write-Host ""Process with name $procName terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -112,8 +114,9 @@ namespace Librac.ProcessHandlerLib
                     $found = $true
                     try {{
                         $proc = Get-Process -Id $process.ProcessId
+                        $procName = $proc.Name
                         $proc.Kill()
-                        Write-Host ""Process with id $process.ProcessId terminated successfully.""
+                        Write-Host ""Process with name $procName terminated successfully.""
                     }} catch {{
                         Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                     }}
@@ -134,14 +137,21 @@ namespace Librac.ProcessHandlerLib
         /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
         /// </para>
         /// </summary> 
-        internal string Get_KillProcesesByName(params string[] args)
+        internal string Get_KillProcesesByName(bool limitScopeToCurrentUser = true, params string[] args)
         {
             var like = args.Where(x => !x.StartsWith("!")).Distinct().ToArray();
             var notLike = args.Where(x => x.StartsWith("!")).Distinct().ToArray();
 
             var builder = new StringBuilder();
             builder.AppendLine(ExecutionPolicySafetycheck);
-            builder.Append("Get-Process | Where-Object { (");
+            builder.Append("Get-Process");
+
+            if (limitScopeToCurrentUser)
+            {
+                builder.Append(" | Where-Object { $_.SessionId -eq $env:SESSIONID }");
+            }
+
+            builder.Append(" | Where-Object { (");
             for (int i = 0; i < like.Length; i++)
             {
                 builder.Append($"$_.ProcessName -like '*{like[i]}*'");
