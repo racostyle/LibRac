@@ -144,14 +144,8 @@ namespace Librac.ProcessHandlerLib
 
             var builder = new StringBuilder();
             builder.AppendLine(ExecutionPolicySafetycheck);
-            builder.Append("Get-Process");
+            builder.Append("Get-Process | Where-Object { (");
 
-            if (limitScopeToCurrentUser)
-            {
-                builder.Append(" | Where-Object { $_.SessionId -eq $env:SESSIONID }");
-            }
-
-            builder.Append(" | Where-Object { (");
             for (int i = 0; i < like.Length; i++)
             {
                 builder.Append($"$_.ProcessName -like '*{like[i]}*'");
