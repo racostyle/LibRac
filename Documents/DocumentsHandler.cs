@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Librac.Documents
 {
@@ -10,12 +11,13 @@ namespace Librac.Documents
         /// Converts xml document to json 
         /// </summary>
         /// <param name="file"></param>
+        /// <param name="filters">for example providing "xmlns" will exclude schemas headers at the start</param>
         /// <returns></returns>
-        public static string ConvertXmlToJson(string file)
+        public static string ConvertXmlToJson(string file, List<string> filters)
         {
             try
             {
-                return _xmlToJson.Convert(file);
+                return _xmlToJson.Convert(file, filters);
             }
             catch (Exception ex)
             { 

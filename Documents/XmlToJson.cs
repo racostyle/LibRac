@@ -7,11 +7,11 @@ namespace Librac.Documents
 {
     internal class XmlToJson
     {
-        internal string Convert(string xmlContent)
+        internal string Convert(string xmlContent, List<string> attributeFilters)
         {
             XDocument doc = XDocument.Parse(xmlContent);
             var jsonObject = new Dictionary<string, object>();
-            ProcessElement(doc.Root, jsonObject);
+            ProcessElement(doc.Root, jsonObject, attributeFilters);
 
             var options = new JsonSerializerOptions
             {
@@ -21,7 +21,7 @@ namespace Librac.Documents
             return System.Text.Json.JsonSerializer.Serialize(jsonObject, options);
         }
 
-        private void ProcessElement(XElement element, Dictionary<string, object> parentObject)
+        private void ProcessElement(XElement element, Dictionary<string, object> parentObject, List<string> attributeFilters)
         {
             var hasSimpleTextContent = !element.HasElements && !element.HasAttributes && !string.IsNullOrEmpty(element.Value.Trim());
 
@@ -36,6 +36,8 @@ namespace Librac.Documents
             var elementObject = new Dictionary<string, object>();
             foreach (var attribute in element.Attributes())
             {
+                if (FilterOutAttribute(attributeFilters, attribute))
+                    break;
                 elementObject[$"@{attribute.Name.LocalName}"] = attribute.Value;
             }
 
@@ -48,7 +50,7 @@ namespace Librac.Documents
                     foreach (var childElement in group)
                     {
                         var childObject = new Dictionary<string, object>();
-                        ProcessElement(childElement, childObject);
+                        ProcessElement(childElement, childObject, attributeFilters);
                         childList.Add(childObject.Values.Single()); // Add the single value or object
                     }
                     elementObject[group.Key] = childList;
@@ -56,13 +58,23 @@ namespace Librac.Documents
                 else // Single element
                 {
                     var childObject = new Dictionary<string, object>();
-                    ProcessElement(group.Single(), childObject);
+                    ProcessElement(group.Single(), childObject, attributeFilters);
                     elementObject[group.Key] = childObject.Values.Single(); // Directly add the single value or object
                 }
             }
 
             // Add this element's data to the parent object
             parentObject[element.Name.LocalName] = elementObject;
+        }
+
+        private static bool FilterOutAttribute(List<string> attributeFilters, XAttribute attribute)
+        {
+            foreach (var filter in attributeFilters)
+            {
+                if (attribute.Name.NamespaceName.Contains(filter))
+                    return true;
+            }
+            return false;
         }
     }
 }
