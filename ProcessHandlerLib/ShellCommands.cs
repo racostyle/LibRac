@@ -19,7 +19,6 @@ namespace Librac.ProcessHandlerLib
             try {{
                 $processDetail = Get-Process -Id $proc.OwningProcess;
                 if ($processDetail) {{
-                    Write-Host ""Attempting to terminate process $($processDetail.Name) on port $($proc.LocalPort)""
                     $processDetail | Stop-Process -Force;
                     Write-Host 'Process terminated successfully.'
                 }} else {{
@@ -46,11 +45,11 @@ namespace Librac.ProcessHandlerLib
                 $ownerInfo = $process.GetOwner().User
                     if ($process.CommandLine -and $process.CommandLine -like '*{processName}*') {{
                         $found = $true
-                        Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo""
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
+                            $procName = $proc.Name
                             $proc.Kill()
-                            Write-Host 'Process terminated successfully.'
+                            Write-Host ""Process with name $procName terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -65,7 +64,15 @@ namespace Librac.ProcessHandlerLib
             return command.Replace("\"", "\\\"");
         }
 
-        internal string Get_KillCurrentUserProcessByFullProcessNameFilter(string processName, string userName = null)
+        internal string Get_KillProcessByFullNameFilter(string processName, bool limitScopeToCurrentUser = true)
+        {
+            if (limitScopeToCurrentUser)
+                return Get_KillCurrentUserProcessByFullNameFilter(processName);
+            else
+                return Get_KillAnyProcessByFullNameFilter(processName);
+        }
+
+        private string Get_KillCurrentUserProcessByFullNameFilter(string processName)
         {
             string command = $@"
             {ExecutionPolicySafetycheck}
@@ -77,11 +84,11 @@ namespace Librac.ProcessHandlerLib
                     $ownerInfo = $process.GetOwner().User
                     if ($ownerInfo -eq $currentUser) {{
                         $found = $true
-                        Write-Host ""Attempting to terminate process $($process.Name) with PID $($process.ProcessId) and Owner $ownerInfo""
                         try {{
                             $proc = Get-Process -Id $process.ProcessId
+                            $procName = $proc.Name
                             $proc.Kill()
-                            Write-Host 'Process terminated successfully.'
+                            Write-Host ""Process with name $procName terminated successfully.""
                         }} catch {{
                             Write-Host ""Failed to terminate process: $($_.Exception.Message)""
                         }}
@@ -96,6 +103,33 @@ namespace Librac.ProcessHandlerLib
             return command.Replace("\"", "\\\"");
         }
 
+        private string Get_KillAnyProcessByFullNameFilter(string processName)
+        {
+            string command = $@"
+            {ExecutionPolicySafetycheck}
+            try {{
+                $processes = Get-WmiObject Win32_Process | Where-Object {{ $_.CommandLine -and $_.CommandLine -like '*{processName}*' }}
+                $found = $false
+                foreach ($process in $processes) {{
+                    $found = $true
+                    try {{
+                        $proc = Get-Process -Id $process.ProcessId
+                        $procName = $proc.Name
+                        $proc.Kill()
+                        Write-Host ""Process with name $procName terminated successfully.""
+                    }} catch {{
+                        Write-Host ""Failed to terminate process: $($_.Exception.Message)""
+                    }}
+                }}
+                if (-not $found) {{
+                    Write-Host 'No matching processes found to terminate.'
+                }}
+            }} catch {{
+                Write-Host ""Failed to execute script: $($_.Exception.Message)""
+            }}";
+            return command.Replace("\"", "\\\"");
+        }
+
 
         /// <summary>
         /// Generates a PowerShell command to forcefully terminate processes by name, allowing for inclusion (name matches) and exclusion (name does not match prefixed with "!") criteria.
@@ -103,7 +137,7 @@ namespace Librac.ProcessHandlerLib
         /// Example of arguments: ("test", "!production") will generate a script that kills all processes that contain "test" but do not contain "production"
         /// </para>
         /// </summary> 
-        internal string Get_KillProcesesByName(params string[] args)
+        internal string Get_KillProcesesByName_FastUnsafe(params string[] args)
         {
             var like = args.Where(x => !x.StartsWith("!")).Distinct().ToArray();
             var notLike = args.Where(x => x.StartsWith("!")).Distinct().ToArray();
@@ -111,6 +145,7 @@ namespace Librac.ProcessHandlerLib
             var builder = new StringBuilder();
             builder.AppendLine(ExecutionPolicySafetycheck);
             builder.Append("Get-Process | Where-Object { (");
+
             for (int i = 0; i < like.Length; i++)
             {
                 builder.Append($"$_.ProcessName -like '*{like[i]}*'");
@@ -126,9 +161,56 @@ namespace Librac.ProcessHandlerLib
                 if (i < notLike.Length - 1)
                     builder.Append(" -and ");
             }
-
-            builder.Append(") } | Stop-Process -Force\r\n");
+            builder.Append(") } | ForEach-Object { Stop-Process -Id $_.Id -Force; Write-Host \"Process killed: $($_.ProcessName) with ID $($_.Id)\" }\r\n");
             return builder.ToString();
+        }
+
+        internal string Get_KillProcesesByName(bool limitScopeToCurrentUser = true, params string[] args)
+        {
+            var like = args.Where(x => !x.StartsWith("!")).Distinct().Select(x => $"$_.ProcessName -like '*{x}*'").ToArray();
+            var notLike = args.Where(x => x.StartsWith("!")).Distinct().Select(x => $"$_.ProcessName -notlike '*{x.Replace("!", string.Empty)}*'").ToArray();
+
+            if (like.Length == 0)
+                return "Write-Host \"At least one parameter needs to be provided and at least one parameter needs to be without '!'\"";
+
+            var executingCommand = new StringBuilder();
+            if (limitScopeToCurrentUser)
+                executingCommand.Append("$_.GetOwner().User -eq $currentUser -and ");
+            if (like.Length > 0)
+                executingCommand.Append($"({string.Join(" -or ", like)})");
+            if (notLike.Length > 0)
+                executingCommand.Append($" -and ({string.Join(" -and ", notLike)})");
+
+            string command = @$"
+            $currentUser = $env:USERNAME
+            try {{
+                $processes = Get-WmiObject Win32_Process | Where-Object {{
+                    try {{
+                        {executingCommand.ToString()}
+                    }} catch {{
+                        $false
+                    }}
+                }}
+                $found = $false
+                foreach ($process in $processes) {{
+                    $found = $true
+                    try {{
+                        $proc = Get-Process -Id $process.ProcessId
+                        $procName = $proc.Name
+                        $proc.Kill()
+                        Write-Host ""Process with name $procName terminated successfully.""
+                    }} catch {{
+                        Write-Host ""Failed to terminate process: $($_.Exception.Message)""
+                    }}
+                }}
+                if (-not $found) {{
+                    Write-Host 'No matching processes found to terminate.'
+                }}
+            }} catch {{
+                Write-Host ""Failed to execute script: $($_.Exception.Message)""
+            }} ";
+
+            return command.Replace("\"", "\\\"");
         }
     }
 }

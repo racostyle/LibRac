@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Librac.ProcessHandlerLib
@@ -13,7 +14,7 @@ namespace Librac.ProcessHandlerLib
         internal readonly int CREATON_TIME = 1;
 
         #region POWERSHELL EXECUTOR 
-        private async Task ExecuteInBackgroundAsync(string command, bool asAdmin)
+        private async Task<string> ExecuteInBackgroundAsync(string command, bool asAdmin)
         {
             ProcessStartInfo info = new ProcessStartInfo
             {
@@ -26,17 +27,29 @@ namespace Librac.ProcessHandlerLib
                 CreateNoWindow = true
             };
 
+            StringBuilder sb = new StringBuilder();
+
             using (Process process = new Process())
             {
                 process.StartInfo = info;
-                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
-                process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
+                process.OutputDataReceived += (sender, args) => 
+                { 
+                    if (args.Data != null) 
+                        sb.AppendLine(args.Data); 
+                };
+                process.ErrorDataReceived += (sender, args) =>
+                {
+                    if (args.Data != null)
+                        sb.AppendLine(args.Data);
+                };
 
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 await WaitForExitAsync(process);
             }
+
+            return sb.ToString();
         }
 
         private Task WaitForExitAsync(Process process)
@@ -51,50 +64,22 @@ namespace Librac.ProcessHandlerLib
         }
         #endregion
 
-        public void Kill_Process_ByPIDAndTimeCreated(string fullFileName)
-        {
-            if (!File.Exists(fullFileName))
-                return;
-
-            var info = LoadProcessInfo(fullFileName);
-
-            foreach (var process in Process.GetProcesses())
-            {
-                if (process.Id.ToString() == info[PID])
-                {
-                    // Check if the process has the same metadata
-                    if (process.StartTime.ToString() == info[CREATON_TIME])
-                    {
-                        try
-                        {
-                            if (!process.HasExited)
-                            {
-                                process.Kill();
-                                Console.WriteLine("Process terminated!");
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine($"Failed to kill the process: {e.Message}");
-                        }
-                        finally
-                        {
-                            process.Dispose();
-                        }
-                        File.Delete(fullFileName);
-                        break;
-                    }
-                }
-            }
-        }
-
-        public void SaveProcessInfo(Process process, string fullFileName)
+        #region PROCESS INFO SAVING
+        public string SaveProcessInfo(Process process, string fullFileName)
         {
             if (string.IsNullOrEmpty(fullFileName))
-                return;
+                return "Full file name not provided";
 
             var startTime = process.StartTime.ToString();
-            File.WriteAllText(fullFileName, $"{process.Id}|{startTime}");
+            try
+            {
+                File.WriteAllText(fullFileName, $"{process.Id}|{startTime}");
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return "Process PID and TimeCreated saved succesfully";
         }
 
         private static string[] LoadProcessInfo(string fileLocation)
@@ -109,30 +94,79 @@ namespace Librac.ProcessHandlerLib
             }
             return new string[] { };
         }
+        #endregion
 
-        public void Kill_Process_ByName(params string[] args)
+        #region PROCESS KILLING
+        public string Kill_Process_ByPIDAndTimeCreated(string fullFileName)
         {
-            var command = shellCommands.Get_KillProcesesByName(args);
-            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
+            if (!File.Exists(fullFileName))
+                return string.Empty;
+
+            var info = LoadProcessInfo(fullFileName);
+
+            string result = "";
+
+            foreach (var process in Process.GetProcesses())
+            {
+                if (process.Id.ToString() == info[PID])
+                {
+                    // Check if the process has the same metadata
+                    if (process.StartTime.ToString() == info[CREATON_TIME])
+                    {
+                        try
+                        {
+                            if (!process.HasExited)
+                            {
+                                process.Kill();
+                                result += $"Process with 'PID: {PID}' terminated" + Environment.NewLine;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            result += $"Failed to kill the process: {e.Message}" + Environment.NewLine;
+                        }
+                        finally
+                        {
+                            process.Dispose();
+                        }
+                        File.Delete(fullFileName);
+                        break;
+                    }
+                }
+            }
+            return result;
         }
 
-        public void Kill_DotnetProcess_ByFullNameFilter(string filter)
+        public string Kill_Process_ByName_FastUnsafe(params string[] args)
+        {
+            var command = shellCommands.Get_KillProcesesByName_FastUnsafe(args);
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
+        }
+
+        public string Kill_Process_ByName(bool limitScopeToCurrentUser = true, params string[] args)
+        {
+            var command = shellCommands.Get_KillProcesesByName(limitScopeToCurrentUser, args);
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
+        }
+
+        public string Kill_DotnetProcess_ByFullNameFilter(string filter)
         {
             var command = shellCommands.Get_KillDotnetProcessByFullProcessNameFilter(filter);
-            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
         }
 
-        public void Kill_CurrentUserProcess_ByFullNameFilter(string filter)
+        public string Kill_Process_ByFullNameFilter(string filter, bool limitScopeToCurrentUser = true)
         {
-            var command = shellCommands.Get_KillCurrentUserProcessByFullProcessNameFilter(filter);
-            Task.Run(() => ExecuteInBackgroundAsync(command, true)).Wait();
+            var command = shellCommands.Get_KillProcessByFullNameFilter(filter, limitScopeToCurrentUser);
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
         }
 
-        public void Kill_Process_ByTcpPortListened(params int[] ports)
+        public string Kill_Process_ByTcpPortListened(params int[] ports)
         {
-            var script = shellCommands.Get_KillByTcpPorts(ports);
-            Task.Run(() => ExecuteInBackgroundAsync(script, true)).Wait();
+            var command = shellCommands.Get_KillByTcpPorts(ports);
+            return Task.Run(() => ExecuteInBackgroundAsync(command, true)).Result;
         }
+        #endregion
 
         #region AUXILIARY
         internal async Task FindProcesesByWindowStyle()
