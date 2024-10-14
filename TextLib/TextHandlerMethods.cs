@@ -91,6 +91,8 @@ namespace Librac.TextLib
 
             if (oldt.Length == 0)
                 return newt.Reverse().ToArray();
+            if (newt.Length == 0)
+                return new string[0];
 
             while (localThreshold > 0)
             {
