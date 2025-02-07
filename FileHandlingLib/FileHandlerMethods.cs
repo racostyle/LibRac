@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 
 namespace Librac.FileHandlingLib
 {
@@ -154,5 +155,92 @@ namespace Librac.FileHandlingLib
             };
         }
         #endregion
+
+        public static string ParsePathToExcludeFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    return Path.GetDirectoryName(path);
+
+                if (Directory.Exists(path))
+                    return path;
+
+                throw new Exception("Invalid path");
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., security issues, invalid path formats)
+                return "Error determining path '" + path + "' type: " + ex.Message;
+            }
+        }
+
+        public static int GetTotalFilesInDirectory(string directoryPath, params string[] filesToExclude)
+        {
+            int CountFilesRecursive(string directory, int amount)
+            {
+                IEnumerable<string> files = Directory.EnumerateFiles(directory);
+                foreach (var pattern in filesToExclude)
+                {
+                    files = files.Where(file => !Path.GetFileName(file).Equals(pattern, StringComparison.OrdinalIgnoreCase)
+                                                 && !Path.GetExtension(file).Equals(pattern, StringComparison.OrdinalIgnoreCase));
+                }
+                amount = files.Count();
+
+                var directories = Directory.GetDirectories(directory);
+
+                foreach (var d in directories)
+                {
+                    amount += CountFilesRecursive(d, amount);
+                }
+                return amount;
+            }
+
+            return CountFilesRecursive(directoryPath, 0);
+        }
+
+        public static List<string> DeleteAllContent(string folderPath, params string[] excluded)
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                Console.WriteLine("The directory '" + folderPath + "' does not exist.");
+                return default;
+            }
+            var log = new List<string>();
+            var files = Directory.GetFiles(folderPath);
+            foreach (var file in files)
+            {
+                if (excluded.Any(x => x.Equals(Path.GetFileNameWithoutExtension(file), StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                try
+                {
+                    File.Delete(file);
+                    log.Add("Deleted file: " + file);
+                }
+                catch (Exception ex)
+                {
+                    log.Add("Failed to delete file: " + file + ". Error: " + ex.Message);
+                }
+            }
+
+            var directories = Directory.GetDirectories(folderPath);
+            foreach (var directory in directories)
+            {
+                if (excluded.Any(x => x.Equals(directory.Split('\\').Last(), StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                try
+                {
+                    Directory.Delete(directory, true); // 'true' ensures recursive deletion
+                    log.Add("Deleted directory: " + directory);
+                }
+                catch (Exception ex)
+                {
+                    log.Add("Failed to delete directory: " + directory + ". Error: " + ex.Message);
+                }
+            }
+            return log;
+        }
     }
 }
