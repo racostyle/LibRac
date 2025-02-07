@@ -20,7 +20,7 @@ namespace Librac.Shell
         /// <param name="visible">Determines whether the process should be visible (default: true).</param>
         /// <param name="asAdmin">Specifies whether the process should be run with administrative privileges (default: true).</param>
         /// <param name="timeoutInMills">The timeout in milliseconds before forcefully terminating the process (-1 for infinite wait).</param>
-        /// <returns>A task that resolves to the command output as a string.</returns>
+        /// <returns>A task that with command output as a string.</returns>
         public async Task<string> ExecuteAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
         {
             return await Execute(command, workingDir, visible, asAdmin, timeoutInMills);
@@ -34,7 +34,7 @@ namespace Librac.Shell
         /// <param name="visible">Determines whether the process should be visible (default: true).</param>
         /// <param name="asAdmin">Specifies whether the process should be run with administrative privileges (default: true).</param>
         /// <param name="timeoutInMills">The timeout in milliseconds before forcefully terminating the process (-1 for infinite wait).</param>
-        /// <returns>A task that resolves to the command output as a string.</returns>
+        /// <returns>A task that with command output as a string.</returns>
         public async Task<string> ExecuteJobAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
         {
             command = WrapCommandInJob(command);
