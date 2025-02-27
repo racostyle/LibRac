@@ -1,17 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using LibRac.Shell.Logger;
+using System;
 using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace Librac.Shell
+namespace LibRac.Shell
 {
     /// <summary>
-    /// Class for running ansyc scripts in PowerShell
+    /// Class for running async scripts in PowerShell
     /// </summary>
     public class ShellExecutor
     {
+        private readonly IShellLogger _logger;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ShellExecutor()
+        {
+            _logger = new VoidLogger();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ShellExecutor(StringBuilder stringBuilder)
+        {
+            _logger = new StringBuilderLogger(stringBuilder);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ShellExecutor(Action<string> action)
+        {
+            _logger = new ActionLogger(action);
+        }
+
         /// <summary>
         /// Executes a PowerShell command and returns its output.
         /// </summary>
@@ -21,9 +47,9 @@ namespace Librac.Shell
         /// <param name="asAdmin">Specifies whether the process should be run with administrative privileges (default: true).</param>
         /// <param name="timeoutInMills">The timeout in milliseconds before forcefully terminating the process (-1 for infinite wait).</param>
         /// <returns>A task that with command output as a string.</returns>
-        public async Task<string> ExecuteAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
+        public async Task ExecuteAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
         {
-            return await Execute(command, workingDir, visible, asAdmin, timeoutInMills);
+            await Execute(command, workingDir, visible, asAdmin, timeoutInMills);
         }
 
         /// <summary>
@@ -35,11 +61,10 @@ namespace Librac.Shell
         /// <param name="asAdmin">Specifies whether the process should be run with administrative privileges (default: true).</param>
         /// <param name="timeoutInMills">The timeout in milliseconds before forcefully terminating the process (-1 for infinite wait).</param>
         /// <returns>A task that with command output as a string.</returns>
-        public async Task<string> ExecuteJobAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
+        public async Task ExecuteAsAJobAsync(string command, string workingDir, bool visible = true, bool asAdmin = true, int timeoutInMills = -1)
         {
             command = WrapCommandInJob(command);
-
-            return await Execute(command, workingDir, visible, asAdmin, timeoutInMills);
+            await Execute(command, workingDir, visible, asAdmin, timeoutInMills);
         }
 
         #region Auxiliary
@@ -58,7 +83,7 @@ namespace Librac.Shell
         #endregion
 
         #region EXECUTOR
-        private async Task<string> Execute(string command, string workingDir, bool visible, bool asAdmin, int timeoutInMills)
+        private async Task Execute(string command, string workingDir, bool visible, bool asAdmin, int timeoutInMills)
         {
             ProcessStartInfo info = new ProcessStartInfo
             {
@@ -72,13 +97,11 @@ namespace Librac.Shell
                 WorkingDirectory = workingDir
             };
 
-            StringBuilder sb = new StringBuilder();
-
             using var process = new Process() { StartInfo = info };
 
             try
             {
-                StartProcess(process, sb, !visible);
+                StartProcess(process, !visible);
 
                 if (timeoutInMills == Timeout.Infinite)
                 {
@@ -95,7 +118,7 @@ namespace Librac.Shell
                     if (completedTask == timeoutTask)
                     {
                         process?.Kill();
-                        sb.AppendLine($"Process timed out after {timeoutInMills} ms and was terminated.");
+                        _logger.Log($"Process timed out after {timeoutInMills} ms and was terminated.");
                     }
                     else
                         cts.Cancel();
@@ -103,25 +126,23 @@ namespace Librac.Shell
             }
             catch (Exception ex)
             {
-                sb.AppendLine($"Error: {ex.Message}");
+                _logger.Log($"Error: {ex.Message}");
             }
-
-            return sb.ToString();
         }
 
-        private void StartProcess(Process process, StringBuilder sb, bool captureOutput)
+        private void StartProcess(Process process, bool captureOutput)
         {
             if (captureOutput)
             {
                 process.OutputDataReceived += (sender, args) =>
                 {
                     if (args.Data != null)
-                        sb.AppendLine(args.Data);
+                        _logger.Log(args.Data);
                 };
                 process.ErrorDataReceived += (sender, args) =>
                 {
                     if (args.Data != null)
-                        sb.AppendLine(args.Data);
+                        _logger.Log(args.Data);
                 };
             }
 
@@ -140,7 +161,7 @@ namespace Librac.Shell
             }
             catch (Exception ex)
             {
-                sb.AppendLine($"Failed to start process: {ex.Message}");
+                _logger.Log($"Failed to start process: {ex.Message}");
             }
         }
 

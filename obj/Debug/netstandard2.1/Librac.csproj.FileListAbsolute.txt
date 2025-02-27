@@ -1,0 +1,13 @@
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.csproj.AssemblyReference.cache
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.AssemblyInfoInputs.cache
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.AssemblyInfo.cs
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.csproj.CoreCompileInputs.cache
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\Librac.sourcelink.json
+C:\Users\km\source\repos\Librac\bin\Debug\netstandard2.1\LibRac.deps.json
+C:\Users\km\source\repos\Librac\bin\Debug\netstandard2.1\LibRac.dll
+C:\Users\km\source\repos\Librac\bin\Debug\netstandard2.1\LibRac.pdb
+C:\Users\km\source\repos\Librac\bin\Debug\netstandard2.1\LibRac.xml
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\LibRac.dll
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\LibRac.xml
+C:\Users\km\source\repos\Librac\obj\Debug\netstandard2.1\LibRac.pdb
