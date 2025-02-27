@@ -11,8 +11,8 @@ namespace LibRac.Text
     public static class TextHandler
     {
         /// <summary>
-        /// Breaks a given text into a list of strings, where each string represents a line of text 
-        /// up to a specified maximum length. This method handles word wrapping without breaking words.
+        /// Breaks a given text into a list of strings, where each string represents a line of text up to a specified maximum length. 
+        /// This method handles word wrapping without breaking words and will work even if no line brakes are in text.
         /// </summary>
         /// <param name="text">The input text to be broken into lines.</param>
         /// <param name="lineLength">The maximum length of each line.</param>
@@ -46,22 +46,7 @@ namespace LibRac.Text
                     break;
 
             }
-            return sb.ToString().Trim() + Environment.NewLine;
-        }
-
-        /// <summary>
-        /// Splits the given text into lines, excluding any empty lines. This method is useful for preprocessing text to remove irrelevant whitespace lines. Will not work correctly if text doesn't have line breaks
-        /// </summary>
-        /// <param name="text">The text to split into non-empty lines.</param>
-        /// <returns>An array of strings, each representing a non-empty line from the original text.</returns>
-        public static string[] SplitTextIntoNotEmptyLines(string text)
-        {
-            var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
-            if (lines.Length > 0 && lines[lines.Length - 1] == "")
-            {
-                return lines.Take(lines.Length - 1).ToArray();
-            }
-            return lines;
+            return sb.ToString().Trim();
         }
 
         /// <summary>
@@ -72,6 +57,22 @@ namespace LibRac.Text
         public static string[] SplitTextIntoLines(string text)
         {
             var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToArray();
+            if (lines.Length > 0 && lines[lines.Length - 1] == "")
+            {
+                return lines.Take(lines.Length - 1).ToArray();
+            }
+            return lines;
+        }
+
+        /// <summary>
+        /// Splits the given text into lines, excluding any empty lines. This method is useful for preprocessing text to remove irrelevant whitespace lines. 
+        /// Will not work correctly if text doesn't have line breaks
+        /// </summary>
+        /// <param name="text">The text to split into non-empty lines.</param>
+        /// <returns>An array of strings, each representing a non-empty line from the original text.</returns>
+        public static string[] SplitTextIntoNotEmptyLines(string text)
+        {
+            var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
             if (lines.Length > 0 && lines[lines.Length - 1] == "")
             {
                 return lines.Take(lines.Length - 1).ToArray();
